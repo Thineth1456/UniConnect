@@ -20,6 +20,7 @@ public class AuthController {
 
     @PostMapping("/student/signup")
     public ResponseEntity<AuthResponse> signUpStudent(@Valid @RequestBody StudentSignUpRequest request) {
+        System.out.println("request come to here");
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUpStudent(request));
     }
 

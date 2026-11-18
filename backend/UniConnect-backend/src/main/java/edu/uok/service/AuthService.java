@@ -8,6 +8,7 @@ import edu.uok.model.Role;
 import edu.uok.model.Student;
 import edu.uok.model.User;
 import edu.uok.repository.UserRepository;
+import edu.uok.security.JwtService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ public class AuthService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
 
 
     public AuthResponse signUpStudent(StudentSignUpRequest req) {
@@ -43,7 +45,7 @@ public class AuthService {
         student.setExpectedSalary(req.expectedSalary());
 
         userRepository.save(student);
-        return new AuthResponse( email,"Student account created", student);
+        return new AuthResponse(jwtService.generateToken(student),"Student account created", student);
     }
     private String normalize(String email) {
         return email.trim().toLowerCase();
