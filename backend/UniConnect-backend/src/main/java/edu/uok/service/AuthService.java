@@ -1,6 +1,7 @@
 package edu.uok.service;
 
 import edu.uok.dto.AuthResponse;
+import edu.uok.dto.JobGiverSignUpRequest;
 import edu.uok.dto.StudentSignUpRequest;
 import edu.uok.exception.ApiException;
 import edu.uok.model.AccountStatus;
@@ -70,5 +71,9 @@ public class AuthService {
 
     private List<String> listOrEmpty(List<String> list) {
         return list == null ? new ArrayList<>() : new ArrayList<>(list);
+    }
+
+    public AuthResponse signUpJobGiver(JobGiverSignUpRequest req) {
+        
     }
 }
