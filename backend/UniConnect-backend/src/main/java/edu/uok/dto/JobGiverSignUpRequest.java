@@ -10,7 +10,7 @@ public record JobGiverSignUpRequest(
     @NotBlank String name,
     @NotBlank @Email String email,
     @NotBlank @Size(min = 8,max = 64) String password,
-    String Address,
+    String address,
     @NotNull Role role,
     @NotBlank String organization,
     @NotBlank String position,
