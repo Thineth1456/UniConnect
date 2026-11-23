@@ -1,5 +1,6 @@
 package edu.uok.service;
 
+import edu.uok.model.ApplicationStatus;
 import edu.uok.model.JobApplication;
 import edu.uok.model.Vacancy;
 import edu.uok.repository.JobApplicationRepository;
@@ -111,5 +112,53 @@ public class JobApplicationService {
                                 "Application not found"
                         )
                 );
+    }
+
+    public JobApplication updateApplicationStatus(
+            String applicationId,
+            ApplicationStatus newStatus
+    ) {
+        if (newStatus == null) {
+            throw new IllegalArgumentException(
+                    "Application status is required"
+            );
+        }
+
+        JobApplication application =
+                getApplicationById(applicationId);
+
+        ApplicationStatus currentStatus =
+                ApplicationStatus.valueOf(application.getStatus());
+
+        boolean allowed = switch (currentStatus) {
+            case SUBMITTED ->
+                    newStatus == ApplicationStatus.UNDER_REVIEW
+                    || newStatus == ApplicationStatus.REJECTED
+                    || newStatus == ApplicationStatus.WITHDRAWN;
+
+            case UNDER_REVIEW ->
+                    newStatus == ApplicationStatus.SHORTLISTED
+                    || newStatus == ApplicationStatus.REJECTED
+                    || newStatus == ApplicationStatus.WITHDRAWN;
+
+            case SHORTLISTED ->
+                    newStatus == ApplicationStatus.HIRED
+                    || newStatus == ApplicationStatus.REJECTED
+                    || newStatus == ApplicationStatus.WITHDRAWN;
+
+            case HIRED, REJECTED, WITHDRAWN -> false;
+        };
+
+        if (!allowed) {
+            throw new IllegalStateException(
+                    "Invalid application status transition: "
+                    + currentStatus + " to " + newStatus
+            );
+        }
+
+        application.setStatus(newStatus.name());
+        application.setUpdatedAt(Instant.now());
+
+        return applicationRepository.save(application);
     }
 }
