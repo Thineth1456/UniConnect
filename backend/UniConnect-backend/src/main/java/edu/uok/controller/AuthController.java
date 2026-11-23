@@ -2,6 +2,7 @@ package edu.uok.controller;
 
 import edu.uok.dto.AuthResponse;
 import edu.uok.dto.JobGiverSignUpRequest;
+import edu.uok.dto.SignInRequest;
 import edu.uok.dto.StudentSignUpRequest;
 import edu.uok.service.AuthService;
 import jakarta.validation.Valid;
@@ -29,5 +30,10 @@ public class AuthController {
     public ResponseEntity<AuthResponse> signUpJobGiver(@Valid @RequestBody JobGiverSignUpRequest request){
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUpJobGiver(request));
     }
+    @PostMapping("/signin")
+    public AuthResponse signIn(@Valid @RequestBody SignInRequest request) {
+        return authService.signIn(request);
+    }
+
 
 }
