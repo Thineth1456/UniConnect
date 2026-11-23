@@ -1,0 +1,115 @@
+package edu.uok.service;
+
+import edu.uok.model.JobApplication;
+import edu.uok.model.Vacancy;
+import edu.uok.repository.JobApplicationRepository;
+import edu.uok.repository.VacancyRepository;
+
+import lombok.RequiredArgsConstructor;
+import org.springframework.stereotype.Service;
+
+import java.time.Instant;
+import java.util.List;
+import java.util.NoSuchElementException;
+
+@Service
+@RequiredArgsConstructor
+public class JobApplicationService {
+
+    private final JobApplicationRepository applicationRepository;
+    private final VacancyRepository vacancyRepository;
+
+    public JobApplication submitApplication(
+            String vacancyId,
+            String studentId,
+            String cvUrl,
+            String coverLetter
+    ) {
+        // Validate required identifiers
+        if (vacancyId == null || vacancyId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Vacancy ID is required"
+            );
+        }
+
+        if (studentId == null || studentId.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Student ID is required"
+            );
+        }
+
+        // Check whether the vacancy exists
+        Vacancy vacancy = vacancyRepository
+                .findById(vacancyId)
+                .orElseThrow(() ->
+                        new NoSuchElementException(
+                                "Vacancy not found"
+                        )
+                );
+
+        // Only approved vacancies accept applications
+        if (!"APPROVED".equals(vacancy.getStatus())) {
+            throw new IllegalStateException(
+                    "This vacancy is not open for applications"
+            );
+        }
+
+        // Check application deadline
+        if (vacancy.getApplicationDeadline() != null
+                && !vacancy.getApplicationDeadline()
+                        .isAfter(Instant.now())) {
+
+            throw new IllegalStateException(
+                    "Application deadline has passed"
+            );
+        }
+
+        // Prevent duplicate submissions
+        boolean alreadyApplied = applicationRepository
+                .existsByVacancyIdAndStudentId(
+                        vacancyId,
+                        studentId
+                );
+
+        if (alreadyApplied) {
+            throw new IllegalStateException(
+                    "Student has already applied for this vacancy"
+            );
+        }
+
+        // Create the application
+        JobApplication application = new JobApplication();
+
+        application.setVacancyId(vacancyId);
+        application.setStudentId(studentId);
+        application.setCvUrl(cvUrl);
+        application.setCoverLetter(coverLetter);
+        application.setStatus("SUBMITTED");
+        application.setAppliedAt(Instant.now());
+        application.setUpdatedAt(Instant.now());
+
+        // Save application to MongoDB
+        return applicationRepository.save(application);
+    }
+
+    public List<JobApplication> getApplicationsByStudent(
+            String studentId
+    ) {
+        return applicationRepository.findByStudentId(studentId);
+    }
+
+    public List<JobApplication> getApplicationsByVacancy(
+            String vacancyId
+    ) {
+        return applicationRepository.findByVacancyId(vacancyId);
+    }
+
+    public JobApplication getApplicationById(String id) {
+        return applicationRepository.findById(id)
+                .orElseThrow(() ->
+                        new NoSuchElementException(
+                                "Application not found"
+                        )
+                );
+    }
+}
