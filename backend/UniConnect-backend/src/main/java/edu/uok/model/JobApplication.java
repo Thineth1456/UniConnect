@@ -4,6 +4,7 @@ import lombok.Getter;
 import lombok.Setter;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import org.springframework.data.mongodb.core.index.CompoundIndex;
 
 import jakarta.validation.constraints.NotBlank;
 import java.time.Instant;
@@ -11,6 +12,7 @@ import java.time.Instant;
 @Getter
 @Setter
 @Document(collection = "job_applications")
+@CompoundIndex(name = "unique_student_vacancy", def = "{'vacancyId': 1, 'studentId': 1}", unique = true)
 public class JobApplication {
 
     @Id
