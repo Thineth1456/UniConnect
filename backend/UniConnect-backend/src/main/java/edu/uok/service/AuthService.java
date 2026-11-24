@@ -1,25 +1,35 @@
 package edu.uok.service;
 
 import edu.uok.dto.AuthResponse;
+import edu.uok.dto.JobGiverSignUpRequest;
 import edu.uok.dto.StudentSignUpRequest;
 import edu.uok.exception.ApiException;
-import edu.uok.model.AccountStatus;
-import edu.uok.model.Role;
-import edu.uok.model.Student;
-import edu.uok.model.User;
+import edu.uok.model.*;
 import edu.uok.repository.UserRepository;
+import edu.uok.security.JwtService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RequiredArgsConstructor
+@Service
 public class AuthService {
+
+    private static final Set<Role> JOB_GIVER_ROLES = Set.of(Role.EMPLOYER, Role.LECTURER, Role.ALUMNUS);
+
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+    private final JwtService jwtService;
+
+    @Value("${app.job-giver-auto-approve:true}")
+    private boolean autoApproveJobGiver;
 
 
     public AuthResponse signUpStudent(StudentSignUpRequest req) {
@@ -41,7 +51,7 @@ public class AuthService {
         student.setExpectedSalary(req.expectedSalary());
 
         userRepository.save(student);
-        return new AuthResponse( email,"Student account created", student);
+        return new AuthResponse(jwtService.generateToken(student),"Student account created", student);
     }
     private String normalize(String email) {
         return email.trim().toLowerCase();
@@ -66,5 +76,27 @@ public class AuthService {
 
     private List<String> listOrEmpty(List<String> list) {
         return list == null ? new ArrayList<>() : new ArrayList<>(list);
+    }
+
+    public AuthResponse signUpJobGiver(JobGiverSignUpRequest req) {
+        if(!JOB_GIVER_ROLES.contains(req.role())){
+            throw new ApiException(HttpStatus.BAD_REQUEST,"Role must be EMPLOYER, LECTURER or ALUMNUS");
+        }
+        String email = normalize(req.email());
+        ensureEmailIsFree(email);
+
+        JobGiver giver = new JobGiver();
+        fillCommonFields(giver, req.name(),email, req.password(),req.address(),req.role());
+        giver.setStatus(autoApproveJobGiver? AccountStatus.ACTIVE:AccountStatus.PENDING);
+
+        giver.setOrganization(req.organization().trim());
+        giver.setPosition(req.position().trim());
+        giver.setContactNumber(req.contactNumber().trim());
+         userRepository.save(giver);
+
+         if(giver.getStatus() == AccountStatus.ACTIVE){
+             return new AuthResponse(jwtService.generateToken(giver),"Account created",giver);
+         }
+         return new AuthResponse(null,"Account create. You can sign in after an administrator approves it.",giver);
     }
 }
