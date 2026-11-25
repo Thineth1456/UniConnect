@@ -1,6 +1,7 @@
 package edu.uok.controller;
 
 import edu.uok.dto.AuthResponse;
+import edu.uok.dto.JobGiverSignUpRequest;
 import edu.uok.dto.StudentSignUpRequest;
 import edu.uok.service.AuthService;
 import jakarta.validation.Valid;
@@ -20,7 +21,13 @@ public class AuthController {
 
     @PostMapping("/student/signup")
     public ResponseEntity<AuthResponse> signUpStudent(@Valid @RequestBody StudentSignUpRequest request) {
+        System.out.println("request come to here");
         return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUpStudent(request));
+    }
+
+    @PostMapping("/job-giver/signup")
+    public ResponseEntity<AuthResponse> signUpJobGiver(@Valid @RequestBody JobGiverSignUpRequest request){
+        return ResponseEntity.status(HttpStatus.CREATED).body(authService.signUpJobGiver(request));
     }
 
 }
