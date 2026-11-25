@@ -31,6 +31,7 @@ public class Vacancy {
     @NotBlank(message = "Job description is required")
     private String description;
     @NotBlank(message = "Company name is required")
+   
     private String companyName;
 
     // PART_TIME or INTERNSHIP
@@ -71,4 +72,3 @@ public class Vacancy {
     private Instant createdAt = Instant.now();
     private Instant updatedAt = Instant.now();
 }
-
