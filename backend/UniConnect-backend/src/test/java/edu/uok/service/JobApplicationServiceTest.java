@@ -1,6 +1,9 @@
 package edu.uok.service;
 
-import edu.uok.model.JobApplication;
+import edu.uok.model.AccountStatus;
+import edu.uok.model.Role;
+import edu.uok.model.Student;
+import edu.uok.repository.UserRepository;import edu.uok.model.JobApplication;
 import edu.uok.model.Vacancy;
 import edu.uok.repository.JobApplicationRepository;
 import edu.uok.repository.VacancyRepository;
@@ -29,6 +32,9 @@ class JobApplicationServiceTest {
     @Mock
     private VacancyRepository vacancyRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private JobApplicationService applicationService;
 
@@ -36,6 +42,13 @@ class JobApplicationServiceTest {
 
     @BeforeEach
     void setUp() {
+        Student student = new Student();
+        student.setId("student-123");
+        student.setRole(Role.STUDENT);
+        student.setStatus(AccountStatus.ACTIVE);
+
+        when(userRepository.findById("student-123"))
+                .thenReturn(Optional.of(student));
         vacancy = new Vacancy();
         vacancy.setId("vacancy-123");
         vacancy.setStatus("APPROVED");

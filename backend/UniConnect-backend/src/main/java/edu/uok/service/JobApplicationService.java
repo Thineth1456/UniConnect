@@ -1,6 +1,10 @@
 package edu.uok.service;
 
+import edu.uok.model.AccountStatus;
 import edu.uok.model.ApplicationStatus;
+import edu.uok.model.Role;
+import edu.uok.model.User;
+import edu.uok.repository.UserRepository;
 import edu.uok.model.JobApplication;
 import edu.uok.model.Vacancy;
 import edu.uok.repository.JobApplicationRepository;
@@ -19,6 +23,7 @@ public class JobApplicationService {
 
     private final JobApplicationRepository applicationRepository;
     private final VacancyRepository vacancyRepository;
+    private final UserRepository userRepository;
 
     public JobApplication submitApplication(
             String vacancyId,
@@ -39,6 +44,25 @@ public class JobApplicationService {
             );
         }
 
+        // Validate the student account
+        User student = userRepository.findById(studentId)
+                .orElseThrow(() ->
+                        new NoSuchElementException(
+                                "Student account not found"
+                        )
+                );
+
+        if (student.getRole() != Role.STUDENT) {
+            throw new IllegalStateException(
+                    "Only students can submit job applications"
+            );
+        }
+
+        if (student.getStatus() != AccountStatus.ACTIVE) {
+            throw new IllegalStateException(
+                    "Student account is not active"
+            );
+        }
         // Check whether the vacancy exists
         Vacancy vacancy = vacancyRepository
                 .findById(vacancyId)
