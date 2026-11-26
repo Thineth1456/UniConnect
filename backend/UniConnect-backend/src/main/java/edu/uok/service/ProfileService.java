@@ -1,7 +1,9 @@
 package edu.uok.service;
 
+import edu.uok.dto.UpdateJobGiverProfileRequest;
 import edu.uok.dto.UpdateStudentProfileRequest;
 import edu.uok.exception.ApiException;
+import edu.uok.model.JobGiver;
 import edu.uok.model.Student;
 import edu.uok.model.User;
 import edu.uok.repository.UserRepository;
@@ -51,12 +53,39 @@ public class ProfileService {
         return userRepository.save(student);
     }
 
+    public JobGiver getJobGiver(String email) {
+        return findJobGiver(email);
+    }
+
+    public JobGiver updateJobGiver(String email, UpdateJobGiverProfileRequest req) {
+        JobGiver giver = findJobGiver(email);
+
+        if (req.name() != null) giver.setName(req.name().trim());
+        if (req.address() != null) giver.setAddress(req.address().trim());
+        if (req.organization() != null) giver.setOrganization(req.organization().trim());
+        if (req.position() != null) giver.setPosition(req.position().trim());
+        if (req.contactNumber() != null) {
+            String number = req.contactNumber().trim();
+            giver.setContactNumber(number.isEmpty() ? null : number); 
+        }
+
+        return userRepository.save(giver);
+    }
+
     private Student findStudent(String email){
         User user = findUser(email);
         if (user instanceof Student student){
             return student;
         }
         throw new ApiException(HttpStatus.FORBIDDEN,"This account is not a student");
+    }
+
+    private JobGiver findJobGiver(String email) {
+        User user = findUser(email);
+        if (user instanceof JobGiver giver) {
+            return giver;
+        }
+        throw new ApiException(HttpStatus.FORBIDDEN, "This account is not a job giver");
     }
     private User findUser(String email) {
         return userRepository.findByEmail(email)
