@@ -1,6 +1,8 @@
 package edu.uok.controller;
 
+import edu.uok.dto.UpdateJobGiverProfileRequest;
 import edu.uok.dto.UpdateStudentProfileRequest;
+import edu.uok.model.JobGiver;
 import edu.uok.model.Student;
 import edu.uok.service.ProfileService;
 import jakarta.validation.Valid;
@@ -31,6 +33,19 @@ public class ProfileController {
     public Student updateStudentProfile(@AuthenticationPrincipal UserDetails principal,
                                         @Valid @RequestBody UpdateStudentProfileRequest request) {
         return profileService.updateStudent(principal.getUsername(), request);
+    }
+
+    @GetMapping("/job-givers/me")
+    @PreAuthorize("hasAnyRole('EMPLOYER', 'LECTURER', 'ALUMNUS')")
+    public JobGiver getJobGiverProfile(@AuthenticationPrincipal UserDetails principal) {
+        return profileService.getJobGiver(principal.getUsername());
+    }
+
+    @PatchMapping("/job-givers/me")
+    @PreAuthorize("hasAnyRole('EMPLOYER', 'LECTURER', 'ALUMNUS')")
+    public JobGiver updateJobGiverProfile(@AuthenticationPrincipal UserDetails principal,
+                                          @Valid @RequestBody UpdateJobGiverProfileRequest request) {
+        return profileService.updateJobGiver(principal.getUsername(), request);
     }
 
 }
