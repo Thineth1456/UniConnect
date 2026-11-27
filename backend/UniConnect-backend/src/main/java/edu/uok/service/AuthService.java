@@ -2,6 +2,7 @@ package edu.uok.service;
 
 import edu.uok.dto.AuthResponse;
 import edu.uok.dto.JobGiverSignUpRequest;
+import edu.uok.dto.SignInRequest;
 import edu.uok.dto.StudentSignUpRequest;
 import edu.uok.exception.ApiException;
 import edu.uok.model.*;
@@ -98,5 +99,22 @@ public class AuthService {
              return new AuthResponse(jwtService.generateToken(giver),"Account created",giver);
          }
          return new AuthResponse(null,"Account create. You can sign in after an administrator approves it.",giver);
+    }
+
+    public AuthResponse signIn(SignInRequest req) {
+        User user = userRepository.findByEmail(normalize(req.email()))
+                .orElseThrow(() -> new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password"));
+
+        if (!passwordEncoder.matches(req.password(), user.getPasswordHash())) {
+            throw new ApiException(HttpStatus.UNAUTHORIZED, "Invalid email or password");
+        }
+        if (user.getStatus() == AccountStatus.PENDING) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Your account is waiting for administrator approval");
+        }
+        if (user.getStatus() == AccountStatus.SUSPENDED) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "Your account has been suspended");
+        }
+
+        return new AuthResponse(jwtService.generateToken(user), "Signed in", user);
     }
 }
